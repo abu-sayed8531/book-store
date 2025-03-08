@@ -405,7 +405,7 @@
 <!-- Button trigger modal -->
 
 
-<!-- Modal -->
+<!-- Add author Modal -->
 <div class="modal fade" id="add-author" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -427,6 +427,34 @@
   </div>
 </div>
     <!-- add author modal ends -->
+<!-- update author modal start -->
+
+<div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updateModalLabel">Update Authors</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <label>Name:</label>
+          <input type="text" class="form-control" placeholder="Author Name" id="update-author-name"/>
+        </div>
+        <div class="row">
+          <label>Email:</label>
+          <input type="email" class="form-control" placeholder="Author Email" id = "update-author-email" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="update-button">Update</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- update author modal ends -->
+
     <!-- axios script begin -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
      <script> 
@@ -451,14 +479,21 @@
               <th scope="row">${author.author_id}</th>
               <td>${author.name}</td>
               <td>${author.email}</td>
-              <td><button class="btn btn-success" data-id="${author.author_id}">Update</button></td>
-              <td> <button class="btn btn-danger" data-id="${author.author_id}">Delete</button></td>
+              <td><button class="btn btn-success btn-update" data-name="${author.name}" data-email="${author.email}" data-id="${author.author_id}">Update</button></td>
+              <td> <button class="btn btn-danger btn-delete" data-id="${author.author_id}">Delete</button></td>
               `;
               tr.innerHTML = tds;
               authorData.appendChild(tr);
 
             });
-           
+           let btnUpdate = authorData.querySelectorAll('.btn-update');
+           let btnDelete = authorData.querySelectorAll('.btn-delete');
+           btnUpdate.forEach((btn)=>{
+          btn.addEventListener('click', updateAuthor);
+           });
+           btnDelete.forEach((btn)=>{
+          btn.addEventListener('click', deleteAuthor);
+           });
           }
 
         }
@@ -468,6 +503,58 @@
       }
       getAuthors();
 
+      // update author 
+      function updateAuthor(event){
+        let authorId = event.target.dataset.id;
+        let authorName = event.target.dataset.name;
+        let authorEmail = event.target.dataset.email;
+        let updateModal = document.getElementById('updateModal');
+        let modal = new bootstrap.Modal(updateModal);
+        updateModal.querySelector("#update-author-name").value = authorName;
+        updateModal.querySelector("#update-author-email").value = authorEmail;
+        updateModal.querySelector("#update-button").addEventListener('click', ()=>{
+          updateFinally(authorId);
+        });
+      modal.show();
+
+      }
+      async function updateFinally(authorId){
+      let url = "/view/authors/updateAuthor.php";
+      let name = document.getElementById('updateModal').querySelector("#update-author-name").value.trim();
+      let email = document.getElementById('updateModal').querySelector("#update-author-email").value.trim();
+      if(!authorId || !name || !email){
+        alert('Please enter valid author id , name and email');
+        return false;
+      }
+      let formData = new FormData();
+      formData.append("author_id", authorId);
+      formData.append('name' , name);
+      formData.append('email', email);
+      try{
+
+        let response = await axios.post(url,formData);
+        if(response.status === 200){
+          document.getElementById('updateModal').querySelector("#update-author-name").value = '';
+          document.getElementById('updateModal').querySelector("#update-author-email").value = '';
+          let modal = bootstrap.Modal.getInstance(document.getElementById('updateModal'));
+          modal.hide();
+          alert('Author updated successfully');
+          getAuthors();
+        
+        }
+      }
+      catch(error){
+        console.log(error); 
+      }
+
+
+
+      }
+
+      //delete Author
+      function deleteAuthor(){
+
+      }
       // add author script
       document.getElementById('add-author-button').addEventListener('click', addAuthor);
       async function addAuthor(){
@@ -489,6 +576,7 @@
             let modalNode = document.getElementById('add-author');
             let modal = bootstrap.Modal.getInstance(modalNode);
             modal.hide();
+            alert('Author added successfully');
             getAuthors();
           }
         }

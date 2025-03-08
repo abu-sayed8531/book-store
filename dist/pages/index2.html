@@ -347,7 +347,34 @@
       <!--begin::App Main-->
       <main class="app-main">
         <!--begin::App Content Header-->
-        
+        <div class="container-fluid">
+          <div class=" d-flex justify-content-between ">
+            <h1>Books </h1>
+            <button class="btn btn-primary" id="add-new-button">Add new book </button>
+          </div>
+          <div class="row mt-4">
+            <table class="table">
+              <thead class="thead-dark">
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Book Title</th>
+                  <th scope="col">Quantity  </th>
+                  <th scope="col">Price </th>
+                  <th scope="col">Author</th>
+                  <th scope="col">Update</th>
+                  <th scope="col">Delete</th>
+
+                </tr>
+              </thead>
+              <tbody id="book-list-body">
+
+              <tr><td colspan = "7">Loading .....</td></tr>
+              </tbody>
+            </table>
+
+
+          </div>
+        </div>
         <!--end::App Content-->
       </main>
       <!--end::App Main-->
@@ -366,6 +393,292 @@
       </footer>
       <!--end::Footer-->
     </div>
+    <!-- update modal starts -->
+
+<div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="updateModalLabel">Add Book</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+         <div class="col-md-6">
+          <select class="form-select" id="select-author">
+
+          </select>
+         </div>
+         <div class="col-md-6">
+          <label>Book Title</label>
+          <input type="text" class="form-control" id="book-title"/>
+         </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <label>Book price</label>
+            <input type = "text" class="form-control " id="book-price"/>
+          </div>
+          <div class="col-md-6">
+            <label>Quantity</label>
+            <input type="number" min = 1 class="form-control" id="book-qty"/>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id ="update-button">Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+    <!-- update modal ends -->
+     <!--  add book modal starts -->
+     <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addModalLabel">Update Book</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+             <div class="col-md-6">
+              <select class="form-select" id="select-author">
+    
+              </select>
+             </div>
+             <div class="col-md-6">
+              <label>Book Title</label>
+              <input type="text" class="form-control" id="book-title"/>
+             </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <label>Book price</label>
+                <input type = "text" class="form-control " id="book-price"/>
+              </div>
+              <div class="col-md-6">
+                <label>Quantity</label>
+                <input type="number" min = 1 class="form-control" id="book-qty"/>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id ="add-button">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+     <!-- add book modal ends -->
+    <!-- axios script start --> 
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+     <script>
+      let baseUrl = "https://bs-api.sobuj.net";
+      axios.defaults.baseURL = baseUrl;
+      //axios.defaults.headers.post['Content-Type'] = 'application/json';
+      async function getAllBooks(){
+        let url = "/view/books/readBook.php";
+        try{
+          let response = await axios.get(url);
+          if(response.status === 200){
+            let data = response.data;
+            let bookListBody = document.getElementById('book-list-body');
+            bookListBody.innerHTML = '';
+             data.forEach(async (book)=>{
+        
+              let bookAuthor = await getBookAuthorName(book.author_id);
+              
+              let bookAuthorName = bookAuthor.hasOwnProperty('name') ? bookAuthor.name : 'Anonymous';
+              
+              bookListBody.innerHTML +=`
+              
+              <tr>
+                  <td  scope="col">${book.book_id}</td>
+                  <td scope="col">${book.title}</td>
+                  <td  scope="col">${book.stock_quantity}</td>
+                  <td scope="col">${book.price} </td>
+                  <td scope="col">${bookAuthorName} </td>
+                  <td scope="col"><button onclick= "updateBook(${book.book_id},'${book.title}',${book.price},${book.stock_quantity},'${bookAuthorName}');" class="btn btn-success btn-update">Update</button></td>
+                  <td scope="col"><button onclick= "deleteBook(${book.book_id})" class="btn btn-danger btn-delete">Delete</button></td>
+                </tr>
+              `; 
+            }
+            
+          ); 
+            
+          }
+        }
+        catch(error){
+          console.log(error);
+        }
+      }
+      getAllBooks();
+      
+      
+      async function getBookAuthorName(id){
+        let url= `/view/authors/getAuthorById.php?author_id=${id}`;
+        try{
+         let response = await axios.get(url);
+        
+         if(response.status === 200){
+          return response.data;
+         }
+        }
+        catch(error){
+          console.log(error);
+        }
+      }
+      let authors = [];
+      window.onload= (e)=>{
+         getAllAuthors();
+      }
+      async function getAllAuthors(){
+        let url = "/view/authors/readAuthors.php";
+        try{
+          let response = await axios.get(url);
+          if(response.status === 200){
+            authors = response.data;
+          }
+        }
+        catch(error){
+          console.log(error);
+        }
+      }
+      
+      function updateBook(id,title,price,qty,authorName){
+         let updateModal = document.getElementById('updateModal');
+         let modal = new bootstrap.Modal(updateModal);
+         let selectAuthor = updateModal.querySelector('#select-author');
+         let bookTitle = updateModal.querySelector("#book-title");
+         let bookPrice = updateModal.querySelector("#book-price");
+         let bookQty = updateModal.querySelector("#book-qty");
+         let updateButton = updateModal.querySelector("#update-button");
+         updateButton.setAttribute('data-id', id);
+         updateButton.addEventListener('click', updateFinally);
+         selectAuthor.innerHTML =`<option selected value=''>Select An Author</option>`;
+         authors.forEach((author)=>{
+          selectAuthor.innerHTML +=`
+          <option ${authorName == author.name?"selected" : '' } value='${author.author_id}'>${author.name}</option>
+          `;
+          bookTitle.value = title;
+          bookPrice.value = price;
+          bookQty.value = qty;
+         });
+
+         modal.show();
+      }
+     async function deleteBook(id){
+         let url = "/view/books/deleteBook.php";
+         let formData = new FormData();
+         formData.append('book_id', id);
+         console.log(formData.get('book_id'));
+         try{
+         let response = await axios.post(url,formData);
+         if(response.status === 200){
+          alert("Book deleted successfully");
+          getAllBooks();
+         }
+         }
+         catch(error){
+          console.log(error);
+         }
+      }
+
+      async function updateFinally(event){
+        let url = "/view/books/updateBook.php";
+        let book_id = event.target.dataset.id;
+        
+         let updateModal = document.getElementById('updateModal');
+         let author_id = updateModal.querySelector('#select-author').value.trim();
+         let title = updateModal.querySelector("#book-title").value.trim();
+         let price = updateModal.querySelector("#book-price").value.trim();
+         let stock_qty = updateModal.querySelector("#book-qty").value.trim();
+         let formData = new FormData();
+         formData.append('book_id', book_id);
+         formData.append('title', title );
+         formData.append('price', price);
+         formData.append('stock_qty', stock_qty);
+         formData.append('author_id', author_id);
+        
+        
+         
+         try{
+         let response = await axios.post(url,formData);
+         if(response.status === 200){
+          let modal = bootstrap.Modal.getInstance(updateModal);
+          updateModal.querySelector('#select-author').value='';
+          updateModal.querySelector("#book-title").value="";
+          updateModal.querySelector("#book-price").value='';
+          updateModal.querySelector("#book-qty").value= '';
+          modal.hide();
+          alert('Book updated successfully');
+          getAllBooks();
+
+         }  
+         }
+         catch(error){
+          console.log(error);
+         }
+        
+      }
+      document.getElementById('add-new-button').addEventListener('click', addNewBook);
+       function addNewBook(){
+           let addModal = document.getElementById('addModal');
+           let modal = new bootstrap.Modal(addModal);
+           let selectAuthor = addModal.querySelector('#select-author');
+           let addButton = addModal.querySelector("#add-button");
+         
+         addButton.addEventListener('click', addFinally);
+         selectAuthor.innerHTML =`<option selected value=''>Select An Author</option>`;
+         console.log(authors);
+         authors.forEach((author)=>{
+          selectAuthor.innerHTML +=`
+          <option  value='${author.author_id}'>${author.name}</option>
+          `;
+         });
+           modal.show();
+      }
+
+      async function addFinally(){
+        let url = "/view/books/insertBook.php";
+        let addModal = document.getElementById('addModal');
+         let author_id = addModal.querySelector('#select-author').value.trim();
+         let title = addModal.querySelector("#book-title").value.trim();
+         let price = addModal.querySelector("#book-price").value.trim();
+         let stock_qty = addModal.querySelector("#book-qty").value.trim();
+         let formData = new FormData();
+        
+         formData.append('title', title );
+         formData.append('price', price);
+         formData.append('stock_qty', stock_qty);
+         formData.append('author_id', author_id);
+        
+        
+         
+         try{
+         let response = await axios.post(url,formData);
+         if(response.status === 200){
+          let modal = bootstrap.Modal.getInstance(addModal);
+          addModal.querySelector('#select-author').value='';
+          addModal.querySelector("#book-title").value="";
+          addModal.querySelector("#book-price").value='';
+          addModal.querySelector("#book-qty").value= '';
+          modal.hide();
+          alert('Book Inserted successfully');
+          getAllBooks();
+
+         }  
+         }
+         catch(error){
+          console.log(error);
+         }
+      }
+
+     </script>
+    <!-- axios script end -->
     <!--end::App Wrapper-->
     <!--begin::Script-->
     <!--begin::Third Party Plugin(OverlayScrollbars)-->

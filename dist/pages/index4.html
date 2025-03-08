@@ -468,7 +468,7 @@
     <script>
       let baseUrl = "https://bs-api.sobuj.net";
       axios.defaults.baseURL = baseUrl;
-      axios.defaults.headers.post['Content-Type'] = 'application/json';
+      //axios.defaults.headers.post['Content-Type'] = 'application/json';
       async function getOrders(){
         let url = "/view/orders/readOrders.php";
         try{
@@ -567,6 +567,7 @@
         
         let formData = new FormData();
         formData.append('order_id',orderId);
+        console.log(formData.get('order_id'));
         
         try{
             
